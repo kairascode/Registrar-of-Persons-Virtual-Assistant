@@ -9,14 +9,15 @@ use Illuminate\Support\Str;
 
 class AssistantController extends Controller
 {
-    protected $aiService;
+     protected $aiService;
 
     public function __construct(AiService $aiService)
     {
+        //$this->middleware('auth');
         $this->aiService = $aiService;
     }
 
-     public function index()
+    public function index()
     {
         return view('assistant.index');
     }
@@ -37,6 +38,7 @@ class AssistantController extends Controller
             'user_message' => $userMessage,
             'assistant_response' => $response,
             'session_id' => $sessionId,
+            'user_id' => auth()->id(),
         ]);
 
         return response()->json([
@@ -48,7 +50,9 @@ class AssistantController extends Controller
     public function history(Request $request)
     {
         $sessionId = $request->session()->get('session_id');
-        $conversations = Conversation::where('session_id', $sessionId)->get();
+        $conversations = Conversation::where('session_id', $sessionId)
+            ->where('user_id', auth()->id())
+            ->get();
         return response()->json($conversations);
     }
     

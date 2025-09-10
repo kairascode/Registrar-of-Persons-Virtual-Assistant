@@ -4,10 +4,12 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Illuminate\Container\Attributes\Log;
 use App\Models\Faq;
+use illuminate\Container\Attributes\Log;
+
 class AiService
-{ protected $client;
+{
+     protected $client;
     protected $apiKey;
     protected $apiUrl;
 
@@ -23,10 +25,17 @@ class AiService
         // Check FAQ first
         $faq = Faq::where('question', 'like', '%' . $userMessage . '%')->first();
         if ($faq) {
+            //Log::info('FAQ match found for: ' . $userMessage);
             return $faq->answer;
         }
 
-        // Fallback to Grok API
+        // Check API key
+        if (!$this->apiKey) {
+           // Log::warning('XAI_API_KEY is not set in .env');
+            return 'API key is missing. Please contact the Registrar’s office for assistance.';
+        }
+
+        // Call Grok API
         try {
             $response = $this->client->post($this->apiUrl, [
                 'headers' => [
@@ -50,10 +59,11 @@ class AiService
             ]);
 
             $data = json_decode($response->getBody(), true);
+            //Log::info('Grok API response received for: ' . $userMessage);
             return $data['choices'][0]['message']['content'] ?? 'Sorry, I could not process your request.';
         } catch (RequestException $e) {
-            //Log::error('Grok API Error: ' . $e->getMessage());
-            return 'An error occurred. Please try again or contact support.';
+            //Log::error('Grok API Error: ' . $e->getMessage() . ' | Code: ' . $e->getCode());
+            return 'Unable to connect to the AI service. Please try again or contact the Registrar’s office.';
         }
     }
 }

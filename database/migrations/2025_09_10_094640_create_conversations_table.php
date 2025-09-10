@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->text('user_message');
+             $table->text('user_message');
             $table->text('assistant_response')->nullable();
             $table->string('session_id');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
